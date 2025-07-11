@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puerto Azul PH - Portal de Residentes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom styles */
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        .sidebar.collapsed .sidebar-icon {
+            margin-right: 0;
+        }
+        .sidebar-toggle {
+            transition: all 0.3s ease;
+        }
+        .sidebar-toggle.rotated {
+            transform: rotate(180deg);
+        }
+        .file-input-label {
+            border: 2px dashed #cbd5e0;
+            transition: all 0.3s ease;
+        }
+        .file-input-label:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+        .file-input-label.dragover {
+            border-color: #3b82f6;
+            background-color: #ebf4ff;
+        }
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .status-approved {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .status-completed {
+            background-color: #e0e7ff;
+            color: #3730a3;
+        }
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+        .modal:not(.active) {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .modal:not(.active) .modal-content {
+            transform: translateY(20px);
+        }
+        .login-bg {
+            background-image: url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        .login-overlay {
+            background-color: rgba(30, 58, 138, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="modal-content relative bg-white rounded-lg shadow-xl w-full max-w-md">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div id="loginForm" class="p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Iniciar Sesión</h2>
+                <div class="mb-4">
+                    <label for="loginEmail" class="block text-gray-700 mb-2">Correo Electrónico</label>
+                    <input type="email" id="loginEmail" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="loginPassword" class="block text-gray-700 mb-2">Contraseña</label>
+                    <input type="password" id="loginPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button onclick="login()" class="w-full gradient-bg text-white py-2 px-4 rounded-lg hover:opacity-90 transition mb-4">
+                    Ingresar
+                </button>
+                <p class="text-center text-gray-600">
+                    ¿No tienes cuenta? 
+                    <button onclick="showRegisterForm()" class="text-blue-600 hover:underline">Regístrate</button>
+                </p>
+            </div>
+            
+            <div id="registerForm" class="p-8 hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Registro de Residente</h2>
+                <div class="mb-4">
+                    <label for="registerName" class="block text-gray-700 mb-2">Nombre Completo</label>
+                    <input type="text" id="registerName" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="registerApartment" class="block text-gray-700 mb-2">Número de Apartamento</label>
+                    <input type="text" id="registerApartment" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="registerEmail" class="block text-gray-700 mb-2">Correo Electrónico</label>
+                    <input type="email" id="registerEmail" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="registerPassword" class="block text-gray-700 mb-2">Contraseña</label>
+                    <input type="password" id="registerPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="registerConfirmPassword" class="block text-gray-700 mb-2">Confirmar Contraseña</label>
+                    <input type="password" id="registerConfirmPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button onclick="register()" class="w-full gradient-bg text-white py-2 px-4 rounded-lg hover:opacity-90 transition mb-4">
+                    Registrarse
+                </button>
+                <p class="text-center text-gray-600">
+                    ¿Ya tienes cuenta? 
+                    <button onclick="showLoginForm()" class="text-blue-600 hover:underline">Inicia Sesión</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Reply Modal -->
+    <div id="replyModal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="modal-content relative bg-white rounded-lg shadow-xl w-full max-w-md">
+            <button onclick="closeReplyModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Responder PQRS</h2>
+                <div class="mb-4">
+                    <label for="replyMessage" class="block text-gray-700 mb-2">Mensaje de respuesta</label>
+                    <textarea id="replyMessage" rows="4" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button onclick="closeReplyModal()" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">
+                        Cancelar
+                    </button>
+                    <button onclick="sendReply()" class="gradient-bg text-white py-2 px-4 rounded-lg hover:opacity-90 transition">
+                        Enviar Respuesta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Review Modal -->
+    <div id="paymentModal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="modal-content relative bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Revisar Comprobante</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2">Información del Pago</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="mb-3">
+                                <p class="text-sm text-gray-500">Residente</p>
+                                <p id="paymentResident" class="font-medium">Juan Pérez</p>
+                            </div>
+                            <div class="mb-3">
+                                <p class="text-sm text-gray-500">Apartamento</p>
+                                <p id="paymentApartment" class="font-medium">Torre A - 502</p>
+                            </div>
+                            <div class="mb-3">
+                                <p class="text-sm text-gray-500">Fecha de Subida</p>
+                                <p id="paymentDate" class="font-medium">15/07/2023</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Estado</p>
+                                <p id="paymentStatus" class="status-badge status-pending">Pendiente</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2">Comprobante</h3>
+                        <div class="bg-gray-100 rounded-lg overflow-hidden">
+                            <img id="paymentImage" src="https://via.placeholder.com/400x600" alt="Comprobante de pago" class="w-full h-auto">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold mb-2">Comentarios</h3>
+                    <textarea id="paymentComments" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe aquí tus comentarios sobre este comprobante..."></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button onclick="rejectPayment()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                        Rechazar
+                    </button>
+                    <button onclick="approvePayment()" class="gradient-bg text-white py-2 px-4 rounded-lg hover:opacity-90 transition">
+                        Aprobar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar bg-white shadow-md flex flex-col w-64">
+            <div class="p-4 border-b flex items-center">
+                <div class="gradient-bg text-white p-2 rounded-lg">
+                    <i class="fas fa-building text-xl"></i>
+                </div>
+                <div class="ml-3 sidebar-text">
+                    <h1 class="font-bold text-lg">Puerto Azul PH</h1>
+                    <p class="text-xs text-gray-500">Portal de Residentes</p>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto">
+                <nav class="p-4">
+                    <div class="mb-6">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 sidebar-text">Principal</p>
+                        <ul>
+                            <li>
+                                <a href="#" onclick="showDashboard()" class="flex items-center py-2 px-3 rounded-lg text-blue-700 bg-blue-50">
+                                    <i class="fas fa-home sidebar-icon mr-3"></i>
+                                    <span class="sidebar-text">Inicio</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 sidebar-text">Servicios</p>
+                        <ul>
+                            <li>
+                                <a href="#" onclick="showPQRSForm()" class="flex items-center py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-comment-alt sidebar-icon mr-3"></i>
+                                    <span class="sidebar-text">Enviar PQRS</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" onclick="showPaymentForm()" class="flex items-center py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-receipt sidebar-icon mr-3"></i>
+                                    <span class="sidebar-text">Subir Comprobante</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div id="adminSection" class="mb-6 hidden">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 sidebar-text">Administración</p>
+                        <ul>
+                            <li>
+                                <a href="#" onclick="showPQRSList()" class="flex items-center py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-list sidebar-icon mr-3"></i>
+                                    <span class="sidebar-text">Gestionar PQRS</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" onclick="showPaymentList()" class="flex items-center py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-file-invoice-dollar sidebar-icon mr-3"></i>
+                                    <span class="sidebar-text">Revisar Pagos</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+            
+            <div class="p-4 border-t">
+                <button id="sidebarToggle" onclick="toggleSidebar()" class="sidebar-toggle w-full flex items-center justify-between py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-circle sidebar-icon mr-3 text-xl"></i>
+                        <div class="sidebar-text">
+                            <p id="userName" class="font-medium">Usuario</p>
+                            <p id="userRole" class="text-xs text-gray-500">Residente</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-left sidebar-text"></i>
+                </button>
+                <button onclick="logout()" class="mt-2 w-full flex items-center py-2 px-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-sign-out-alt sidebar-icon mr-3"></i>
+                    <span class="sidebar-text">Cerrar Sesión</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+                <div>
+                    <h1 id="pageTitle" class="text-xl font-bold text-gray-800">Bienvenido</h1>
+                    <p id="pageSubtitle" class="text-sm text-gray-600">Portal de residentes Puerto Azul PH</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button class="p-2 rounded-full hover:bg-gray-100">
+                            <i class="fas fa-bell text-gray-600"></i>
+                        </button>
+                        <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="flex items-center">
+                            <div class="h-8 w-8 rounded-full gradient-bg flex items-center justify-center text-white">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="ml-2">
+                                <p id="headerUserName" class="text-sm font-medium">Usuario</p>
+                                <p id="headerUserApartment" class="text-xs text-gray-500">Apartamento</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Content Area -->
+            <main class="p-4 md:p-6">
+                <!-- Dashboard -->
+                <div id="dashboardContent" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">PQRS Pendientes</p>
+                                    <p class="text-2xl font-bold">3</p>
+                                </div>
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Pagos Pendientes</p>
+                                    <p class="text-2xl font-bold">2</p>
+                                </div>
+                                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                    <i class="fas fa-file-invoice-dollar"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Notificaciones</p>
+                                    <p class="text-2xl font-bold">5</p>
+                                </div>
+                                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-500">Eventos Próximos</p>
+                                    <p class="text-2xl font-bold">1</p>
+                                </div>
+                                <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-lg font-semibold">PQRS Recientes</h2>
+                                <button onclick="showPQRSForm()" class="text-sm text-blue-600 hover:underline">Nueva PQRS</button>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="border-b pb-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-medium">Problema con el ascensor</p>
+                                            <p class="text-sm text-gray-500">Queja - 12/07/2023</p>
+                                        </div>
+                                        <span class="status-badge status-pending">Pendiente</span>
+                                    </div>
+                                </div>
+                                <div class="border-b pb-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-medium">Solicitud de parqueadero</p>
+                                            <p class="text-sm text-gray-500">Petición - 05/07/2023</p>
+                                        </div>
+                                        <span class="status-badge status-completed">Completado</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-lg font-semibold">Pagos Recientes</h2>
+                                <button onclick="showPaymentForm()" class="text-sm text-blue-600 hover:underline">Nuevo Pago</button>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="border-b pb-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-medium">Administración Julio 2023</p>
+                                            <p class="text-sm text-gray-500">Subido: 01/07/2023</p>
+                                        </div>
+                                        <span class="status-badge status-approved">Aprobado</span>
+                                    </div>
+                                </div>
+                                <div class="border-b pb-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-medium">Cuota extraordinaria</p>
+                                            <p class="text-sm text-gray-500">Subido: 15/07/2023</p>
+                                        </div>
+                                        <span class="status-badge status-pending">Pendiente</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-lg font-semibold mb-4">Anuncios Recientes</h2>
+                        <div class="space-y-4">
+                            <div class="border-b pb-4">
+                                <p class="font-medium">Mantenimiento de piscina</p>
+                                <p class="text-sm text-gray-500 mb-2">Publicado: 18/07/2023</p>
+                                <p class="text-gray-700">Se informa a los residentes que el próximo lunes 24 de julio se realizará mantenimiento a la piscina principal. Estará cerrada de 8:00 am a 5:00 pm.</p>
+                            </div>
+                            <div>
+                                <p class="font-medium">Asamblea general</p>
+                                <p class="text-sm text-gray-500 mb-2">Publicado: 10/07/2023</p>
+                                <p class="text-gray-700">Convocamos a todos los residentes a la asamblea general extraordinaria que se llevará a cabo el 30 de julio a las 9:00 am en el salón comunal.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PQRS Form -->
+                <div id="pqrsFormContent" class="hidden">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-bold mb-6">Enviar PQRS</h2>
+                        <form id="pqrsForm" class="space-y-4">
+                            <div>
+                                <label for="pqrsName" class="block text-gray-700 mb-2">Nombre Completo</label>
+                                <input type="text" id="pqrsName" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="pqrsApartment" class="block text-gray-700 mb-2">Número de Apartamento</label>
+                                <input type="text" id="pqrsApartment" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="pqrsType" class="block text-gray-700 mb-2">Tipo de PQRS</label>
+                                <select id="pqrsType" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    <option value="">Seleccione una opción</option>
+                                    <option value="Petición">Petición</option>
+                                    <option value="Queja">Queja</option>
+                                    <option value="Reclamo">Reclamo</option>
+                                    <option value="Sugerencia">Sugerencia</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="pqrsDescription" class="block text-gray-700 mb-2">Descripción</label>
+                                <textarea id="pqrsDescription" rows="4" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required></textarea>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="gradient-bg text-white py-2 px-6 rounded-lg hover:opacity-90 transition">
+                                    Enviar PQRS
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Payment Form -->
+                <div id="paymentFormContent" class="hidden">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-bold mb-6">Subir Comprobante de Pago</h2>
+                        <form id="paymentForm" class="space-y-4">
+                            <div>
+                                <label for="paymentName" class="block text-gray-700 mb-2">Nombre Completo</label>
+                                <input type="text" id="paymentName" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="paymentApartment" class="block text-gray-700 mb-2">Número de Apartamento</label>
+                                <input type="text" id="paymentApartment" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="paymentType" class="block text-gray-700 mb-2">Tipo de Pago</label>
+                                <select id="paymentType" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                    <option value="">Seleccione una opción</option>
+                                    <option value="Administración">Administración</option>
+                                    <option value="Cuota Extraordinaria">Cuota Extraordinaria</option>
+                                    <option value="Parqueadero">Parqueadero</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="paymentAmount" class="block text-gray-700 mb-2">Monto Pagado</label>
+                                <input type="number" id="paymentAmount" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="paymentDate" class="block text-gray-700 mb-2">Fecha de Pago</label>
+                                <input type="date" id="paymentDate" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2">Comprobante</label>
+                                <label for="paymentFile" class="file-input-label flex flex-col items-center justify-center p-8 rounded-lg cursor-pointer">
+                                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                                    <p class="text-gray-600 font-medium">Arrastra tu archivo aquí o haz clic para seleccionar</p>
+                                    <p class="text-gray-500 text-sm mt-1">Formatos aceptados: JPG, PNG, PDF (Máx. 5MB)</p>
+                                    <input type="file" id="paymentFile" class="hidden" accept=".jpg,.jpeg,.png,.pdf" required>
+                                </label>
+                                <div id="fileName" class="mt-2 text-sm text-gray-600 hidden"></div>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="gradient-bg text-white py-2 px-6 rounded-lg hover:opacity-90 transition">
+                                    Subir Comprobante
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- PQRS List (Admin) -->
+                <div id="pqrsListContent" class="hidden">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h2 class="text-xl font-bold">Gestión de PQRS</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Residente</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apartamento</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15/07/2023</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">María Rodríguez</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Torre B - 301</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Queja</td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">Ruido excesivo en horas de la noche...</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge status-pending">Pendiente</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button onclick="openReplyModal()" class="text-blue-600 hover:text-blue-900 mr-3">Responder</button>
+                                            <button class="text-green-600 hover:text-green-900">Completar</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/07/2023</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Carlos Gómez</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Torre A - 502</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Petición</td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">Solicitud de parqueadero adicional...</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge status-completed">Completado</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-blue-600 hover:text-blue-900">Ver</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">05/07/2023</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Ana López</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Torre C - 101</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Reclamo</td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">Daño en la puerta del ascensor...</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge status-completed">Completado</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-blue-600 hover:text-blue-900">Ver</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-gray-50 px-6 py-3 flex items-center justify-between border-t">
+                            <div class="flex-1 flex justify-between sm:hidden">
+                                <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Anterior
+                                </button>
+                                <button class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Siguiente
+                                </button>
+                            </div>
+                            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-700">
+                                        Mostrando
+                                        <span class="font-medium">1</span>
+                                        a
+                                        <span class="font-medium">3</span>
+                                        de
+                                        <span class="font-medium">12</span>
+                                        resultados
+                                    </p>
+                                </div>
+                                <div>
+                                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                        <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Anterior</span>
+                                            <i class="fas fa-chevron-left"></i>
+                                        </button>
+                                        <button aria-current="page" class="z-10 bg-blue-50 border-blue-500 text-blue-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            1
+                                        </button>
+                                        <button class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            2
+                                        </button>
+                                        <button class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            3
+                                        </button>
+                                        <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Siguiente</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment List (Admin) -->
+                <div id="paymentListContent" class="hidden">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h2 class="text-xl font-bold">Revisión de Comprobantes</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Residente</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apartamento</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15/07/2023</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Juan Pérez</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Torre A - 502</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Administración</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$450,000</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge status-pending">Pendiente</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button onclick="openPaymentModal()" class="text-blue-600 hover:text-blue-900">Revisar</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/07/2023</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Luisa Fernández</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Torre B - 203</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cuota Extraordinaria</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$120,000</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge status-approved">Aprobado</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-blue-600 hover:text-blue-900">Ver</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">05/07/2023</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Andrés Ramírez</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Torre C - 401</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Parqueadero</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$80,000</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge status-rejected">Rechazado</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-blue-600 hover:text-blue-900">Ver</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-gray-50 px-6 py-3 flex items-center justify-between border-t">
+                            <div class="flex-1 flex justify-between sm:hidden">
+                                <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Anterior
+                                </button>
+                                <button class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Siguiente
+                                </button>
+                            </div>
+                            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-700">
+                                        Mostrando
+                                        <span class="font-medium">1</span>
+                                        a
+                                        <span class="font-medium">3</span>
+                                        de
+                                        <span class="font-medium">8</span>
+                                        resultados
+                                    </p>
+                                </div>
+                                <div>
+                                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                        <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Anterior</span>
+                                            <i class="fas fa-chevron-left"></i>
+                                        </button>
+                                        <button aria-current="page" class="z-10 bg-blue-50 border-blue-500 text-blue-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            1
+                                        </button>
+                                        <button class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            2
+                                        </button>
+                                        <button class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            3
+                                        </button>
+                                        <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Siguiente</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Login Page (Initial) -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center login-bg">
+        <div class="login-overlay absolute inset-0"></div>
+        <div class="relative z-10 bg-white rounded-lg shadow-xl p-8 w-full max-w-md mx-4">
+            <div class="text-center mb-8">
+                <div class="gradient-bg text-white p-3 rounded-lg inline-block">
+                    <i class="fas fa-building text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800 mt-4">Puerto Azul PH</h1>
+                <p class="text-gray-600">Portal de Residentes</p>
+            </div>
+            
+            <form id="initialLoginForm" class="space-y-6">
+                <div>
+                    <label for="initialLoginEmail" class="block text-gray-700 mb-2">Correo Electrónico</label>
+                    <input type="email" id="initialLoginEmail" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div>
+                    <label for="initialLoginPassword" class="block text-gray-700 mb-2">Contraseña</label>
+                    <input type="password" id="initialLoginPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="rememberMe" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="rememberMe" class="ml-2 block text-sm text-gray-700">Recordarme</label>
+                    </div>
+                    <a href="#" class="text-sm text-blue-600 hover:underline">¿Olvidaste tu contraseña?</a>
+                </div>
+                <div>
+                    <button type="button" onclick="initialLogin()" class="w-full gradient-bg text-white py-2 px-4 rounded-lg hover:opacity-90 transition">
+                        Ingresar
+                    </button>
+                </div>
+                <div class="text-center">
+                    <p class="text-gray-600">
+                        ¿No tienes cuenta? 
+                        <button type="button" onclick="showInitialRegister()" class="text-blue-600 hover:underline">Regístrate</button>
+                    </p>
+                </div>
+            </form>
+            
+            <form id="initialRegisterForm" class="space-y-6 hidden">
+                <div>
+                    <label for="initialRegisterName" class="block text-gray-700 mb-2">Nombre Completo</label>
+                    <input type="text" id="initialRegisterName" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div>
+                    <label for="initialRegisterApartment" class="block text-gray-700 mb-2">Número de Apartamento</label>
+                    <input type="text" id="initialRegisterApartment" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div>
+                    <label for="initialRegisterEmail" class="block text-gray-700 mb-2">Correo Electrónico</label>
+                    <input type="email" id="initialRegisterEmail" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div>
+                    <label for="initialRegisterPassword" class="block text-gray-700 mb-2">Contraseña</label>
+                    <input type="password" id="initialRegisterPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div>
+                    <label for="initialRegisterConfirmPassword" class="block text-gray-700 mb-2">Confirmar Contraseña</label>
+                    <input type="password" id="initialRegisterConfirmPassword" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div>
+                    <button type="button" onclick="initialRegister()" class="w-full gradient-bg text-white py-2 px-4 rounded-lg hover:opacity-90 transition">
+                        Registrarse
+                    </button>
+                </div>
+                <div class="text-center">
+                    <p class="text-gray-600">
+                        ¿Ya tienes cuenta? 
+                        <button type="button" onclick="showInitialLogin()" class="text-blue-600 hover:underline">Inicia Sesión</button>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentUser = null;
+        let isAdmin = false;
+        let selectedPQRS = null;
+        let selectedPayment = null;
+        
+        // DOM Elements
+        const loginPage = document.getElementById('loginPage');
+        const mainLayout = document.querySelector('.flex.h-screen');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        
+        // Content areas
+        const dashboardContent = document.getElementById('dashboardContent');
+        const pqrsFormContent = document.getElementById('pqrsFormContent');
+        const paymentFormContent = document.getElementById('paymentFormContent');
+        const pqrsListContent = document.getElementById('pqrsListContent');
+        const paymentListContent = document.getElementById('paymentListContent');
+        
+        // Modals
+        const authModal = document.getElementById('authModal');
+        const replyModal = document.getElementById('replyModal');
+        const paymentModal = document.getElementById('paymentModal');
+        
+        // Forms
+        const initialLoginForm = document.getElementById('initialLoginForm');
+        const initialRegisterForm = document.getElementById('initialRegisterForm');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const pqrsForm = document.getElementById('pqrsForm');
+        const paymentForm = document.getElementById('paymentForm');
+        
+        // File upload
+        const fileInputLabel = document.querySelector('.file-input-label');
+        const fileInput = document.getElementById('paymentFile');
+        const fileName = document.getElementById('fileName');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in (for demo purposes)
+            const loggedIn = localStorage.getItem('loggedIn');
+            const userData = localStorage.getItem('userData');
+            
+            if (loggedIn && userData) {
+                currentUser = JSON.parse(userData);
+                isAdmin = currentUser.email === 'admin@puertoazul.com';
+                setupLoggedInUI();
+            } else {
+                mainLayout.classList.add('hidden');
+                loginPage.classList.remove('hidden');
+            }
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            // File upload
+            fileInput.addEventListener('change', handleFileUpload);
+            fileInputLabel.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileInputLabel.classList.add('dragover');
+            });
+            fileInputLabel.addEventListener('dragleave', () => {
+                fileInputLabel.classList.remove('dragover');
+            });
+            fileInputLabel.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileInputLabel.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileUpload();
+                }
+            });
+            
+            // Form submissions
+            pqrsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                submitPQRS();
+            });
+            
+            paymentForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                submitPayment();
+            });
+        }
+        
+        function handleFileUpload() {
+            if (fileInput.files.length) {
+                const file = fileInput.files[0];
+                fileName.textContent = `Archivo seleccionado: ${file.name}`;
+                fileName.classList.remove('hidden');
+            }
+        }
+        
+        // Authentication functions
+        function initialLogin() {
+            const email = document.getElementById('initialLoginEmail').value;
+            const password = document.getElementById('initialLoginPassword').value;
+            
+            // Demo validation
+            if (email && password) {
+                if (email === 'admin@puertoazul.com' && password === 'admin123') {
+                    currentUser = {
+                        name: 'Administrador',
+                        email: 'admin@puertoazul.com',
+                        apartment: 'Administración',
+                        role: 'admin'
+                    };
+                    isAdmin = true;
+                } else {
+                    // Demo user
+                    currentUser = {
+                        name: 'Juan Pérez',
+                        email: 'juan@example.com',
+                        apartment: 'Torre A - 502',
+                        role: 'resident'
+                    };
+                    isAdmin = false;
+                }
+                
+                localStorage.setItem('loggedIn', 'true');
+                localStorage.setItem('userData', JSON.stringify(currentUser));
+                
+                setupLoggedInUI();
+            } else {
+                alert('Por favor ingresa tu correo y contraseña');
+            }
+        }
+        
+        function initialRegister() {
+            const name = document.getElementById('initialRegisterName').value;
+            const apartment = document.getElementById('initialRegisterApartment').value;
+            const email = document.getElementById('initialRegisterEmail').value;
+            const password = document.getElementById('initialRegisterPassword').value;
+            const confirmPassword = document.getElementById('initialRegisterConfirmPassword').value;
+            
+            if (!name || !apartment || !email || !password || !confirmPassword) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('Las contraseñas no coinciden');
+                return;
+            }
+            
+            // Demo registration
+            currentUser = {
+                name: name,
+                email: email,
+                apartment: apartment,
+                role: 'resident'
+            };
+            isAdmin = false;
+            
+            localStorage.setItem('loggedIn', 'true');
+            localStorage.setItem('userData', JSON.stringify(currentUser));
+            
+            setupLoggedInUI();
+        }
+        
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // Demo validation
+            if (email && password) {
+                if (email === 'admin@puertoazul.com' && password === 'admin123') {
+                    currentUser = {
+                        name: 'Administrador',
+                        email: 'admin@puertoazul.com',
+                        apartment: 'Administración',
+                        role: 'admin'
+                    };
+                    isAdmin = true;
+                } else {
+                    // Demo user
+                    currentUser = {
+                        name: 'Juan Pérez',
+                        email: 'juan@example.com',
+                        apartment: 'Torre A - 502',
+                        role: 'resident'
+                    };
+                    isAdmin = false;
+                }
+                
+                localStorage.setItem('loggedIn', 'true');
+                localStorage.setItem('userData', JSON.stringify(currentUser));
+                
+                closeAuthModal();
+                setupLoggedInUI();
+            } else {
+                alert('Por favor ingresa tu correo y contraseña');
+            }
+        }
+        
+        function register() {
+            const name = document.getElementById('registerName').value;
+            const apartment = document.getElementById('registerApartment').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            
+            if (!name || !apartment || !email || !password || !confirmPassword) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('Las contraseñas no coinciden');
+                return;
+            }
+            
+            // Demo registration
+            currentUser = {
+                name: name,
+                email: email,
+                apartment: apartment,
+                role: 'resident'
+            };
+            isAdmin = false;
+            
+            localStorage.setItem('loggedIn', 'true');
+            localStorage.setItem('userData', JSON.stringify(currentUser));
+            
+            closeAuthModal();
+            setupLoggedInUI();
+        }
+        
+        function logout() {
+            localStorage.removeItem('loggedIn');
+            localStorage.removeItem('userData');
+            currentUser = null;
+            isAdmin = false;
+            
+            mainLayout.classList.add('hidden');
+            loginPage.classList.remove('hidden');
+            showInitialLogin();
+        }
+        
+        function setupLoggedInUI() {
+            // Update UI with user data
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = isAdmin ? 'Administrador' : 'Residente';
+            document.getElementById('headerUserName').textContent = currentUser.name;
+            document.getElementById('headerUserApartment').textContent = currentUser.apartment;
+            
+            // Show admin section if admin
+            const adminSection = document.getElementById('adminSection');
+            if (isAdmin) {
+                adminSection.classList.remove('hidden');
+            } else {
+                adminSection.classList.add('hidden');
+            }
+            
+            // Show main layout
+            loginPage.classList.add('hidden');
+            mainLayout.classList.remove('hidden');
+            
+            // Show dashboard by default
+            showDashboard();
+        }
+        
+        // Navigation functions
+        function showDashboard() {
+            hideAllContent();
+            dashboardContent.classList.remove('hidden');
+            document.getElementById('pageTitle').textContent = 'Bienvenido';
+            document.getElementById('pageSubtitle').textContent = 'Portal de residentes Puerto Azul PH';
+        }
+        
+        function showPQRSForm() {
+            hideAllContent();
+            pqrsFormContent.classList.remove('hidden');
+            document.getElementById('pageTitle').textContent = 'Enviar PQRS';
+            document.getElementById('pageSubtitle').textContent = 'Peticiones, Quejas, Reclamos y Sugerencias';
+            
+            // Pre-fill form if user is logged in
+            if (currentUser) {
+                document.getElementById('pqrsName').value = currentUser.name;
+                document.getElementById('pqrsApartment').value = currentUser.apartment;
+            }
+        }
+        
+        function showPaymentForm() {
+            hideAllContent();
+            paymentFormContent.classList.remove('hidden');
+            document.getElementById('pageTitle').textContent = 'Subir Comprobante';
+            document.getElementById('pageSubtitle').textContent = 'Registro de pagos de administración';
+            
+            // Pre-fill form if user is logged in
+            if (currentUser) {
+                document.getElementById('paymentName').value = currentUser.name;
+                document.getElementById('paymentApartment').value = currentUser.apartment;
+                document.getElementById('paymentDate').valueAsDate = new Date();
+            }
+        }
+        
+        function showPQRSList() {
+            hideAllContent();
+            pqrsListContent.classList.remove('hidden');
+            document.getElementById('pageTitle').textContent = 'Gestión de PQRS';
+            document.getElementById('pageSubtitle').textContent = 'Revisión de Peticiones, Quejas, Reclamos y Sugerencias';
+        }
+        
+        function showPaymentList() {
+            hideAllContent();
+            paymentListContent.classList.remove('hidden');
+            document.getElementById('pageTitle').textContent = 'Revisión de Comprobantes';
+            document.getElementById('pageSubtitle').textContent = 'Validación de pagos de residentes';
+        }
+        
+        function hideAllContent() {
+            dashboardContent.classList.add('hidden');
+            pqrsFormContent.classList.add('hidden');
+            paymentFormContent.classList.add('hidden');
+            pqrsListContent.classList.add('hidden');
+            paymentListContent.classList.add('hidden');
+        }
+        
+        // Form submission functions
+        function submitPQRS() {
+            const name = document.getElementById('pqrsName').value;
+            const apartment = document.getElementById('pqrsApartment').value;
+            const type = document.getElementById('pqrsType').value;
+            const description = document.getElementById('pqrsDescription').value;
+            
+            if (!name || !apartment || !type || !description) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            // In a real app, you would send this data to a server
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('es-CO');
+            
+            alert(`PQRS enviada con éxito el ${dateStr}. Tipo: ${type}`);
+            
+            // Reset form
+            pqrsForm.reset();
+            
+            // Return to dashboard
+            showDashboard();
+        }
+        
+        function submitPayment() {
+            const name = document.getElementById('paymentName').value;
+            const apartment = document.getElementById('paymentApartment').value;
+            const type = document.getElementById('paymentType').value;
+            const amount = document.getElementById('paymentAmount').value;
+            const date = document.getElementById('paymentDate').value;
+            const file = document.getElementById('paymentFile').files[0];
+            
+            if (!name || !apartment || !type || !amount || !date || !file) {
+                alert('Por favor completa todos los campos y sube un comprobante');
+                return;
+            }
+            
+            // Check file type
+            const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+            if (!validTypes.includes(file.type)) {
+                alert('Por favor sube un archivo JPG, PNG o PDF');
+                return;
+            }
+            
+            // Check file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('El archivo es demasiado grande (máximo 5MB)');
+                return;
+            }
+            
+            // In a real app, you would upload the file to a server
+            alert(`Comprobante de pago subido con éxito. Tipo: ${type}, Monto: $${amount}`);
+            
+            // Reset form
+            paymentForm.reset();
+            fileName.classList.add('hidden');
+            
+            // Return to dashboard
+            showDashboard();
+        }
+        
+        // Modal functions
+        function openAuthModal() {
+            authModal.classList.add('active');
+            document.body.classList.add('overflow-hidden');
+        }
+        
+        function closeAuthModal() {
+            authModal.classList.remove('active');
+            document.body.classList.remove('overflow-hidden');
+        }
+        
+        function showLoginForm() {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+        }
+        
+        function showRegisterForm() {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+        }
+        
+        function showInitialLogin() {
+            initialLoginForm.classList.remove('hidden');
+            initialRegisterForm.classList.add('hidden');
+        }
+        
+        function showInitialRegister() {
+            initialLoginForm.classList.add('hidden');
+            initialRegisterForm.classList.remove('hidden');
+        }
+        
+        function openReplyModal() {
+            // In a real app, you would set selectedPQRS to the item being replied to
+            selectedPQRS = {
+                id: 1,
+                resident: 'María Rodríguez',
+                apartment: 'Torre B - 301',
+                date: '15/07/2023',
+                type: 'Queja',
+                description: 'Ruido excesivo en horas de la noche...',
+                status: 'Pendiente'
+            };
+            
+            replyModal.classList.add('active');
+            document.body.classList.add('overflow-hidden');
+        }
+        
+        function closeReplyModal() {
+            replyModal.classList.remove('active');
+            document.body.classList.remove('overflow-hidden');
+        }
+        
+        function sendReply() {
+            const message = document.getElementById('replyMessage').value;
+            
+            if (!message) {
+                alert('Por favor escribe un mensaje de respuesta');
+                return;
+            }
+            
+            // In a real app, you would send this reply to the server
+            alert(`Respuesta enviada a ${selectedPQRS.resident} (${selectedPQRS.apartment})`);
+            
+            // Reset and close
+            document.getElementById('replyMessage').value = '';
+            closeReplyModal();
+        }
+        
+        function openPaymentModal() {
+            // In a real app, you would set selectedPayment to the item being reviewed
+            selectedPayment = {
+                id: 1,
+                resident: 'Juan Pérez',
+                apartment: 'Torre A - 502',
+                date: '15/07/2023',
+                type: 'Administración',
+                amount: '$450,000',
+                status: 'Pendiente',
+                image: 'https://via.placeholder.com/400x600'
+            };
+            
+            // Update modal with payment data
+            document.getElementById('paymentResident').textContent = selectedPayment.resident;
+            document.getElementById('paymentApartment').textContent = selectedPayment.apartment;
+            document.getElementById('paymentDate').textContent = selectedPayment.date;
+            document.getElementById('paymentStatus').textContent = selectedPayment.status;
+            document.getElementById('paymentStatus').className = `status-badge status-${selectedPayment.status.toLowerCase()}`;
+            document.getElementById('paymentImage').src = selectedPayment.image;
+            document.getElementById('paymentComments').value = '';
+            
+            paymentModal.classList.add('active');
+            document.body.classList.add('overflow-hidden');
+        }
+        
+        function closePaymentModal() {
+            paymentModal.classList.remove('active');
+            document.body.classList.remove('overflow-hidden');
+        }
+        
+        function approvePayment() {
+            const comments = document.getElementById('paymentComments').value;
+            
+            // In a real app, you would send this to the server
+            alert(`Pago aprobado para ${selectedPayment.resident}. Comentarios: ${comments || 'Ninguno'}`);
+            
+            closePaymentModal();
+        }
+        
+        function rejectPayment() {
+            const comments = document.getElementById('paymentComments').value;
+            
+            if (!comments) {
+                alert('Por favor escribe los motivos del rechazo');
+                return;
+            }
+            
+            // In a real app, you would send this to the server
+            alert(`Pago rechazado para ${selectedPayment.resident}. Motivos: ${comments}`);
+            
+            closePaymentModal();
+        }
+        
+        // Sidebar functions
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+            sidebarToggle.classList.toggle('rotated');
+        }
+    </script>
+</body>
+</html>
